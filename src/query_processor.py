@@ -27,7 +27,8 @@ def generate_query_and_expected_csv(et):
     queries = pd.DataFrame(columns=fields[:2]);
     for q in et.iter("QUERY"):
         queries["QueryNumber"] = int(q.find("QueryNumber").text)
-        queries["QueryText"] = unidecode(q.find("QueryText").text).upper()
+
+    prepared_queries_txt = preprocessing_pipeline(queries["QueryText"]); 
 
 
     print(queries);
@@ -38,6 +39,13 @@ def generate_query_and_expected_csv(et):
 
     pass
     
+def preprocessing_pipeline(text_batch):
+    for q in text_batch:
+        q = unidecode().upper()
+        
 
-ui = read_xml_file()    
-generate_query_and_expected_csv(ui);
+
+
+
+test = read_xml_file()    
+generate_query_and_expected_csv(test);
