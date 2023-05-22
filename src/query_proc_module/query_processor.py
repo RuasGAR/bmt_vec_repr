@@ -1,7 +1,7 @@
 from unidecode import unidecode
 import xml.etree.ElementTree as ET
 import pandas as pd
-import configparser
+from configobj import ConfigObj
 import logging
 import string
 import nltk
@@ -13,15 +13,14 @@ nltk.download('punkt')
 nltk.download('stopwords')
 
 
-
 # configs do logging
 logging.basicConfig(level=logging.DEBUG)
 logging.info("[FILE] query_processor.py starting...")
 
 # leitura de configurações
-config = configparser.ConfigParser();
+config = {}
 try: 
-    config.read("pc.cfg");
+    config = ConfigObj('pc.cfg')
     logging.info("The config file was parsed with no errors.")
 except Exception as e:
     logging.exception("Errors ocurred while parsing the config file.");
