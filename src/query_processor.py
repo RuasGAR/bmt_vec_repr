@@ -3,6 +3,15 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 from unidecode import unidecode
 import logging
+import nltk
+from nltk.tokenize import word_tokenize
+nltk.download('punkt')
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+import string
+import time
+
+
 
 # configs do logging
 logging.basicConfig(level=logging.DEBUG)
@@ -22,7 +31,7 @@ except Exception as e:
 
 
 def read_query_file():
-    
+    logging.info("[FUNCTION] read_query_file starting ...")
     logging.info("Reading the file specified by the field 'LEIA'")
     filepath = config["QUERY_CONFIG"]["LEIA"];
     logging.info(f"The file to be read is located/have name: {filepath}")
@@ -40,15 +49,39 @@ def read_query_file():
     count = 0
     for _ in file_content.iter("QUERY"):
         count += 1 
-    logging.info(f"Read {count} amount of queries.")
+    logging.info(f"Read {count} queries.")
+    logging.info("[FUNCTION] read_query_file end.")
 
-    return file_content
-
-
-
+    return file_content # important to notice that this is already a iter through queries!!!
 
 
-def generate_query_and_expected_csv(et):
+def preprocessing_queries(et) -> pd.DataFrame:
+    
+    logging.info("[FUNCTION] preprocessing_queries starting ...")
+    lang = 'english'
+    
+    # DataFrame
+    cols = ["QueryNumber", "QueryText"]
+    queries = pd.DataFrame(columns=cols)
+    
+    logging.info("Starting queries' preprocessing iteration...")
+    t_start = time.time()
+    for index,q in enumerate(et):
+        q_num = int(q.find("QueryNumber").text)
+        q_txt = q.find("QueryText").text.upper()
+        q_txt = unidecode(q_txt)
+        q_tokens = word_tokenize(q_txt, language=lang)
+        # list comprehension to clean punctuation and stopwords
+        q_tokens = [t for t in q_tokens if t not in string.punctuation and t not in stopwords.words(lang)]
+        q = ','.join(q_tokens)
+        queries.loc[index+1] = [q_num, q]
+    t_end = time.time()
+    logging.info(f"End of preprocessing after {t_end-t_start}s")
+
+    return queries
+
+
+def generate_query_csv(et):
     
     # Pegando campos de um consulta
     fields = [];
@@ -70,16 +103,14 @@ def generate_query_and_expected_csv(et):
 
     pass
     
-def preprocessing_pipeline(text_batch):
-    print(f"text {text_batch}");
-    for q in text_batch:
-        q = unidecode().upper()
+
         
+def main():
 
-
-
-
-test = read_query_file()    
-#generate_query_and_expected_csv(test);
+    test = read_query_file()
+    #test = test.iter("QUERY");    
+    preprocessing_queries(test);
+    
+main()
 
 logging.info("[FILE-DONE] query_processor.py has ended its activities.")
