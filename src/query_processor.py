@@ -76,40 +76,31 @@ def preprocessing_queries(et) -> pd.DataFrame:
         q = ','.join(q_tokens)
         queries.loc[index+1] = [q_num, q]
     t_end = time.time()
-    logging.info(f"End of preprocessing after {t_end-t_start}s")
+    logging.info(f"End of preprocessing after {(t_end-t_start):.5f}s")
+    logging.info("[FUNCTION] preprocessing_queries ended")
 
     return queries
 
 
-def generate_query_csv(et):
+def generate_query_csv(queries):
     
-    # Pegando campos de um consulta
-    fields = [];
-    for child in et.find("QUERY"):
-        fields.append(child.tag);
+    logging.info("[FUNCTION] generate_query_csv startig ...")
+    filepath = config["QUERY_CONFIG"]["CONSULTAS"]
     
-    # Primeiro arquivo -> CONSULTAS
-    queries = pd.DataFrame(columns=fields[:2]);
-    for q in et.iter("QUERY"):
-        queries["QueryNumber"] = int(q.find("QueryNumber").text)
-    print(queries.head());
-
-    prepared_queries_txt = preprocessing_pipeline(queries["QueryText"]); 
-
-    # Segundo arquivo -> ESPERADOS
-    #expected = pd.DataFrame(columns=[fields[0],"DocNumber","DocVotes"]);
-
-
-
-    pass
-    
+    try:
+        queries.to_csv(filepath,sep=';',index=False) #overwrite as standard behaviour
+    except Exception as e:
+        logging.exception("Error while trying to create csv on {filepath}. More info below.")
+        print(e);
 
         
 def main():
 
-    test = read_query_file()
-    #test = test.iter("QUERY");    
-    preprocessing_queries(test);
+    queries_iterator = read_query_file()
+    queries = preprocessing_queries(queries_iterator)
+    generate_query_csv(queries)
+
+
     
 main()
 
