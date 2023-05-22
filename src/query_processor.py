@@ -1,15 +1,16 @@
-import configparser
-import pandas as pd
-import xml.etree.ElementTree as ET
 from unidecode import unidecode
+import xml.etree.ElementTree as ET
+import pandas as pd
+import configparser
 import logging
+import string
 import nltk
+import time
 from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+
 nltk.download('punkt')
 nltk.download('stopwords')
-from nltk.corpus import stopwords
-import string
-import time
 
 
 
@@ -28,7 +29,7 @@ except Exception as e:
     print(e)
 
 
-
+###### QUERY GENERATION
 
 def read_query_file():
     logging.info("[FUNCTION] read_query_file starting ...")
@@ -84,7 +85,7 @@ def preprocessing_queries(et) -> pd.DataFrame:
 
 def generate_query_csv(queries):
     
-    logging.info("[FUNCTION] generate_query_csv startig ...")
+    logging.info("[FUNCTION] generate_query_csv starting ...")
     filepath = config["QUERY_CONFIG"]["CONSULTAS"]
     
     try:
@@ -93,12 +94,57 @@ def generate_query_csv(queries):
         logging.exception("Error while trying to create csv on {filepath}. More info below.")
         print(e);
 
+    logging.info("[FUNCTION] generate_query_csv ended.")
+
+##### EXPECTED generation
+
+def generate_expected_csv(q_iter):
+
+    logging.info("[FUNCTION] generate_expected_csv starting ...")
+    cols = ["QueryNumber", "DocNumber", "DocVotes"]
+    expected_data = pd.DataFrame(columns=cols)
+
+    logging.info("Processing Documents and its Scores...")
+    t_start = time.time()
+    
+    for row in q_iter:
         
+        r_num = int(row.find("QueryNumber").text)
+
+        for item in row.iter("Item"):
+            doc_num = item.text
+            doc_score = item.get('score').replace('0','')
+            if doc_score: # condition just in case the replacement of zeros cause the field to be empty
+                score = len(doc_score)
+            expected_data.loc[len(expected_data)] = [r_num, doc_num, score]
+
+    t_end = time.time()
+    logging.info(f"Processed a total of {len(expected_data)-1} itens in {(t_end-t_start):.5f}s.")
+
+    # saving to CSV file ...
+    
+    filepath = config["QUERY_CONFIG"]["ESPERADOS"]
+
+    try:
+        logging.info("Creating expected results file according to 'ESPERADOS' config field.")
+        expected_data.to_csv(filepath,sep=";",index=False)
+    except Exception as e:
+        logging.exception(f"Error ocurred while saving to {filepath}. See more details below.")
+        print(e)
+
+    logging.info("File created succesfully.")
+
+    logging.info("[FUNCTION] generate_expected_csv ended.")
+
+
+##### MAIN PROGRAM 
+
 def main():
 
     queries_iterator = read_query_file()
-    queries = preprocessing_queries(queries_iterator)
-    generate_query_csv(queries)
+    #queries = preprocessing_queries(queries_iterator)
+    #generate_query_csv(queries)
+    generate_expected_csv(queries_iterator)
 
 
     
