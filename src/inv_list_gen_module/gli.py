@@ -1,6 +1,5 @@
 import pandas as pd
 import logging
-from configobj import ConfigObj
 import time
 import xml.etree.ElementTree as ET
 
@@ -8,10 +7,19 @@ import xml.etree.ElementTree as ET
 logging.basicConfig(level=logging.DEBUG)
 logging.info("[FILE] gli.py starting...")
 
+def extract_path(string):
+    return string.split("=")[1].replace("\n","")
+
+
 # reading config
-config = {}
+config = {"LEIA":[], "ESCREVA":""}
 try: 
-    config = ConfigObj("gli.cfg",list_values=True);
+    with open("gli.cfg") as f:
+        for line in f.readlines():
+            if "ESCREVA" in line:
+                config["ESCREVA"] = extract_path(line)    
+            else:
+                config["LEIA"].append(extract_path(line))
     logging.info("The config file was parsed with no errors.")
 except Exception as e:
     logging.exception("Errors ocurred while parsing the config file.");
@@ -24,7 +32,7 @@ def read_xml_files():
     
     logging.info("[FUNCTION] read_xml_files starting ...")
 
-    filepaths_list = config["GLI_CONFIG"]["LEIA"]    
+    filepaths_list = config["LEIA"]    
     logging.info(f"Found {len(filepaths_list)} 'LEIA'-oriented files.")
 
     acc = 0 
@@ -37,12 +45,12 @@ def read_xml_files():
         with open(path) as f:
             try: 
                 file_content = ET.parse(f);
-                file_iter = file_content.getroot().iter("RECORD")
-                el_iters.append(file_iter)
-                acc += len(file_iter)
+                file_records = file_content.getroot().findall("RECORD")
+                el_iters.append(file_records)
+                acc += len(file_records)
                 logging.info(f"Parsed {path} succesfully!")
             except Exception as e:
-                logging.exception("Erro while parsing the file content.")
+                logging.exception("Error while parsing the file content.")
                 print(e);    
 
     t_end = time.time()
@@ -53,4 +61,4 @@ def read_xml_files():
 
     return el_iters # important to notice that this is already a iter through queries!!!
 
-#test = read_xml_files()
+test = read_xml_files()
