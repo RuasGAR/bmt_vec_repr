@@ -67,6 +67,13 @@ def read_xml_files():
 
     return records 
 
+def check_for_number(str):
+    if str.isnumeric(): return True
+    try:
+        n = float(str)
+        return True
+    except ValueError:
+        return False
 
 def generate_records_csv(records):
     
@@ -94,13 +101,15 @@ def generate_records_csv(records):
             rec_text = rec.find("ABSTRACT").text        
             
         # Normalizing and extracting stopwords
-        rec_text = unidecode(rec_text).upper()
+        rec_text = unidecode(rec_text).lower()
         tokens = word_tokenize(rec_text)
         words = [
-            token for token in tokens 
+            token.upper() for token in tokens 
             if token not in string.punctuation and 
             token not in stopwords.words() and
-            not token.isnumeric()
+            not check_for_number(token) 
+            and token != ''
+            and token != '``'
         ]
         
         # Data filling
@@ -137,7 +146,3 @@ def generate_records_csv(records):
 
 test = read_xml_files()
 generate_records_csv(test)
-
-# problemas:
-# the não está como uma stopword (talvez o problema seja filtrar depois de case-folding)???
-# '' e `` aparecem como termos válidos; remover esses casos
