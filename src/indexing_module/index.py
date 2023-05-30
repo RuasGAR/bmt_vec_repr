@@ -49,6 +49,20 @@ def idf(data,n_docs):
 
     return inverse_document_frequency    
 
+def tf_idf(tf,idf):
+    return tf/idf
+
+def weight(chosen_weight):
+    # Abstraction to the metric used as weights
+    # To add another option, you can extend this module with special functions and 
+    # add its references below in a 'switch-case'-like structure
+
+    if chosen_weight == 'tf-idf':
+        return tf_idf
+    else:
+        return None
+
+
 def generate_vec_space():
     """ 
         Gera uma matriz termo-documento, na qual os pesos estão representados com TF-IDF;
@@ -96,9 +110,10 @@ def generate_vec_space():
         for d in doc_list:
             d = int(d)
             if matrix[index][d-1] == 0:
-                matrix[index][d-1] = doc_list.count(d)/inv_doc_freq[d-1] # tf / idf
+                # Refer to the 'weight' function for explanation on the the applied logic
+                matrix[index][d-1] = weight('tf-idf')(doc_list.count(d),inv_doc_freq[d-1]) 
             else:
-                # sinaliza que já foi feiro o cálculo e prossegue
+                # if the value was already set, we don't need to re-calculate the weights
                 continue
     t_end = time.time()
     logging.info(f"Term-document matrix ready. (time elapsed:{(t_end-t_start):.5f}s)")
