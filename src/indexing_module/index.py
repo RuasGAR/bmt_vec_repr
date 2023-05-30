@@ -5,8 +5,8 @@ import numpy as np
 import time
 from scipy.sparse import csr_matrix
 
+# logging config
 logging.basicConfig(level=logging.DEBUG)
-logging.info("[FILE] index.py starting...")
 
 """  
     PONTOS CHAVE DE REFERÊNCIA
@@ -126,7 +126,8 @@ def generate_vec_space():
     return matrix
 
 
-# TESTS
-test = generate_vec_space()
+if __name__ == "__main__":
 
-logging.info("[FILE] index.py ended.")
+    logging.info("[FILE] index.py starting...")
+    data = generate_vec_space()
+    logging.info("[FILE] index.py ended.")

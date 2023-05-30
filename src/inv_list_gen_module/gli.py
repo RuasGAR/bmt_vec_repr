@@ -1,21 +1,24 @@
 import pandas as pd
 import logging
 import time
-import string
+import re
 import xml.etree.ElementTree as ET
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from unidecode import unidecode
 
+# REGEX GLOBAL CONSTANT (notice that is applies to lower case)
+NO_FIT = re.compile(r'[^a-z]')
 
+# logging config
 logging.basicConfig(level=logging.DEBUG)
-logging.info("[FILE] gli.py starting...")
+
 
 def extract_path(string):
     return string.split("=")[1].replace("\n","")
 
 
-# reading config
+# reading actual config file
 config = {"LEIA":[], "ESCREVA":""}
 try: 
     with open("gli.cfg") as f:
@@ -67,13 +70,21 @@ def read_xml_files():
 
     return records 
 
-def check_for_number(str):
-    if str.isnumeric(): return True
-    try:
-        n = float(str)
-        return True
-    except ValueError:
+# Auxiliar method for properly filtering undesired word structures
+def check_string(str):
+    
+    # check for word size
+    if (len(str) < 2):
         return False
+
+    # checking for ASCII symbols other than letters form a to z, lower case.
+    # this automatically exclude "words" formed only by ints (e.g. '189') and floats (e.g. '2.41'); 
+    # and also remove blank strings such as ' ' and ` ` patterns 
+    if (NO_FIT.search(str) == True):
+        return False
+
+    # we return True to evaluate the str parameter as a valid token    
+    return True
 
 def generate_records_csv(records):
     
@@ -105,11 +116,8 @@ def generate_records_csv(records):
         tokens = word_tokenize(rec_text)
         words = [
             token.upper() for token in tokens 
-            if token not in string.punctuation and 
-            token not in stopwords.words() and
-            not check_for_number(token) 
-            and token != ''
-            and token != '``'
+            if check_string(token) and 
+            token not in stopwords.words() 
         ]
         
         # Data filling
@@ -142,7 +150,12 @@ def generate_records_csv(records):
     logging.info("[FUNCTION] generate_records_csv ended.")
 
 
+if __name__ == "__main__":
 
+    logging.info("[FILE] gli.py starting...")
 
-test = read_xml_files()
-generate_records_csv(test)
+    data = read_xml_files()
+    generate_records_csv(data)
+
+    logging.info("[FILE] gli.py ended.")
+
