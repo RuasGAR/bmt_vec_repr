@@ -3,7 +3,7 @@ import pandas as pd
 import logging
 import numpy as np
 import time
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, save_npz
 
 # logging config
 logging.basicConfig(level=logging.DEBUG)
@@ -126,8 +126,21 @@ def generate_vec_space():
     return matrix
 
 
+def save_vec_space(sparse_matrix,dest="../../generated"):
+    try:
+        logging.info(f"Saving given data into {dest} directory.")
+        save_npz(f'{dest}/vec_model.npz', sparse_matrix)
+        logging.info(f"Saved successfully to vec_model.pnz !")
+    except Exception as e:
+        logging.exception("Error while saving the model (vectorial space). Check log below.")
+        print(e)
+
+
 if __name__ == "__main__":
 
     logging.info("[FILE] index.py starting...")
     data = generate_vec_space()
+    
+    save_vec_space(data)
+
     logging.info("[FILE] index.py ended.")
