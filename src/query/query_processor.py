@@ -52,7 +52,7 @@ def read_query_file():
     logging.info(f"Read {count} queries.")
     logging.info("[FUNCTION] read_query_file end.")
 
-    return file_content # important to notice that this is already a iter through queries!!!
+    return file_content 
 
 
 def preprocessing_queries(et) -> pd.DataFrame:
