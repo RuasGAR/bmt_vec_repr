@@ -3,7 +3,8 @@ import pandas as pd
 import logging
 import numpy as np
 import time
-from scipy.sparse import csr_matrix, save_npz
+from scipy.sparse import csr_matrix
+import pickle
 
 # logging config
 logging.basicConfig(level=logging.DEBUG)
@@ -84,6 +85,7 @@ def generate_vec_space():
     n_docs = last_doc_list[len(last_doc_list)-1] 
 
     matrix = np.zeros((len(data.index),n_docs))
+    labels = {}
         
     inv_doc_freq = idf(data,n_docs)
 
@@ -105,7 +107,8 @@ def generate_vec_space():
     logging.info(f"Filling up term-document matrix with TF-IDF weights...")
     for index, row in enumerate(data.itertuples(index=False)):
         
-        _, doc_list = row
+        token, doc_list = row
+        labels[token] = index
 
         for d in doc_list:
             d = int(d)
@@ -123,14 +126,18 @@ def generate_vec_space():
 
     logging.info("[FUNCTION] generate_vec_space ended.")
 
-    return matrix
+    return (matrix,labels)
 
 
-def save_vec_space(sparse_matrix,dest="../../generated"):
+def save_vec_space(sparse_matrix,labels,dest="../../generated"):
     try:
         logging.info(f"Saving given data into {dest} directory.")
-        save_npz(f'{dest}/vec_model.npz', sparse_matrix)
-        logging.info(f"Saved successfully to vec_model.pnz !")
+
+        saveable = {'sparse_matrix':sparse_matrix, 'token':labels}
+        with open(f'{dest}/vec_model.pkl','wb') as f:
+            pickle.dump(saveable, f)    
+        
+        logging.info(f"Saved successfully to vec_model.pkl")
     except Exception as e:
         logging.exception("Error while saving the model (vectorial space). Check log below.")
         print(e)
@@ -139,8 +146,8 @@ def save_vec_space(sparse_matrix,dest="../../generated"):
 if __name__ == "__main__":
 
     logging.info("[FILE] index.py starting...")
-    data = generate_vec_space()
+    data,labels = generate_vec_space()
     
-    save_vec_space(data)
+    save_vec_space(data,labels)
 
     logging.info("[FILE] index.py ended.")

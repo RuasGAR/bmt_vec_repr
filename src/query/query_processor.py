@@ -13,11 +13,11 @@ nltk.download('punkt')
 nltk.download('stopwords')
 
 
-# configs do logging
+# logging config
 logging.basicConfig(level=logging.DEBUG)
-logging.info("[FILE] query_processor.py starting...")
 
-# leitura de configurações
+
+# general config 
 config = {}
 try: 
     config = ConfigObj('pc.cfg')
@@ -68,11 +68,11 @@ def preprocessing_queries(et) -> pd.DataFrame:
     t_start = time.time()
     for index,q in enumerate(et):
         q_num = int(q.find("QueryNumber").text)
-        q_txt = q.find("QueryText").text.upper()
+        q_txt = q.find("QueryText").text
         q_txt = unidecode(q_txt)
         q_tokens = word_tokenize(q_txt, language=lang)
         # list comprehension to clean punctuation and stopwords
-        q_tokens = [t for t in q_tokens if t not in string.punctuation and t not in stopwords.words(lang)]
+        q_tokens = [t.upper() for t in q_tokens if t not in string.punctuation and t not in stopwords.words(lang)]
         q = ','.join(q_tokens)
         queries.loc[index+1] = [q_num, q]
     t_end = time.time()
@@ -94,6 +94,7 @@ def generate_query_csv(queries):
         print(e);
 
     logging.info("[FUNCTION] generate_query_csv ended.")
+
 
 ##### EXPECTED generation
 
@@ -138,15 +139,14 @@ def generate_expected_csv(q_iter):
 
 ##### MAIN PROGRAM 
 
-def main():
+if __name__ == "__main__":
+
+
+    logging.info("[FILE] query_processor.py starting...")
 
     queries_iterator = read_query_file()
-    #queries = preprocessing_queries(queries_iterator)
-    #generate_query_csv(queries)
+    queries = preprocessing_queries(queries_iterator)
+    generate_query_csv(queries)
     generate_expected_csv(queries_iterator)
-
-
     
-main()
-
-logging.info("[FILE-DONE] query_processor.py has ended its activities.")
+    logging.info("[FILE] query_processor.py has ended its activities.")
