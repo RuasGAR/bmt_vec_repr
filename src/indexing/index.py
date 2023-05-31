@@ -79,11 +79,17 @@ def generate_vec_space():
     t_end = time.time()
     logging.info(f"Read inverted list data from {config['LEIA']} in {(t_end-t_start):.5f}s.")
 
-    # IMPORTANT: it is assumed that the last element of the last doc_list points the Total number of documents
-    # This is true considering the mecanism of inverted list generation, but be aware of this, anyhow
-    last_doc_list = data.iloc[:,-1][len(data.index)-1]
-    n_docs = last_doc_list[len(last_doc_list)-1] 
+    # IMPORTANT: we assume knowledge of how the inverted list is generated here.
+    # Specifically: we are presuming that each term's document list is sorted.
+    # With this assumption, we only check for the last element in each doc list to find the
+    # greater value, which will be used as the total amount of documents. 
+    n_docs = 0
+    for i in range(len(data.index)):
+        last_doc_on_item_i = data.iloc[i,-1][-1]
+        if last_doc_on_item_i >= n_docs:
+            n_docs = last_doc_on_item_i
 
+    # matrix and labels-mapping dictionary
     matrix = np.zeros((len(data.index),n_docs))
     labels = {}
         

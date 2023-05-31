@@ -8,7 +8,7 @@ from nltk.corpus import stopwords
 from unidecode import unidecode
 
 # REGEX GLOBAL CONSTANT (notice that is applies to lower case)
-NO_FIT = re.compile(r'[^a-z]')
+FIT_PATTERN = re.compile(r'^[a-z]+$')
 
 # logging config
 logging.basicConfig(level=logging.DEBUG)
@@ -80,7 +80,7 @@ def check_string(str):
     # checking for ASCII symbols other than letters form a to z, lower case.
     # this automatically exclude "words" formed only by ints (e.g. '189') and floats (e.g. '2.41'); 
     # and also remove blank strings such as ' ' and ` ` patterns 
-    if (NO_FIT.search(str) == True):
+    if (bool(FIT_PATTERN.match(str)) == False):
         return False
 
     # we return True to evaluate the str parameter as a valid token    
@@ -157,5 +157,4 @@ if __name__ == "__main__":
     data = read_xml_files()
     generate_records_csv(data)
 
-    logging.info("[FILE] gli.py ended.")
-
+    logging.info("[FILE] gli.py ended.")   
