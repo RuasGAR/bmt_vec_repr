@@ -7,7 +7,8 @@ from configobj import ConfigObj
 from scipy.sparse import csr_matrix
 from os import path
 from functools import reduce
-from typing import Tuple,List
+from typing import Tuple,List,Union
+import ast
 
 # logging config
 logging.basicConfig(level=logging.DEBUG)
@@ -34,9 +35,13 @@ def cosine_distance(x,y):
 
 def search(model, queries):
 
+    """ Returns non-ranked results in a Dataframe """
+
+
     logging.info("[FUNCTION] search starting ...")
     
     sparse_matrix, tk_map = model['sparse_matrix'],model['token']
+    # TO-DO: Maybe the following two lines can be discarded
     sparse_matrix = csr_matrix(sparse_matrix)
     matrix = np.array(sparse_matrix.toarray())
 
@@ -103,10 +108,66 @@ def search(model, queries):
 
     return no_rank_results
 
-def ranking(results:List[Tuple[int,int,float]]):
-    for i in results:
-        print(i)
+def ranking(data:Union[List[Tuple[int,int,float]],None]=None, proxy_flag=False, proxy_fname=None):
 
+    """ Saves and return the final results, ordeded by query_id and properly ranked acoording to cosine similarity """
+
+    logging.info("[FUNCTION] ranking starting ...")
+
+    if proxy_flag == True:
+        logging.info("Usage of proxy file selected.")
+        try:
+            logging.info(f"Usage of proxy file {proxy_fname} selected.")
+            data = pd.read_csv(proxy_fname, sep=";", converters={1:ast.literal_eval})
+            logging.info("Loaded file successfully.")
+        except Exception as e:
+            logging.exception("An error ocurred while reading the file. Check info below for further details.")
+            print(e)
+               
+    queries = set(data['QUERY_ID'])
+    columns=['QUERY_ID', 'RESPONSE']
+    final_results = pd.DataFrame(columns=columns)
+
+    logging.info("Starting rank processing.")
+    t_avg = 0
+    t_start = time.time()
+    for i,q_id in enumerate(queries,start=1):
+
+        t_query_start = time.time()
+        docs_distances_to_q = data[data['QUERY_ID'] == q_id]['RESPONSE']
+        sorted_distances_to_q = sorted(docs_distances_to_q, key=lambda x:x[1], reverse=True) 
+        
+        ranking = 1
+        for res in sorted_distances_to_q:
+            (n_doc,dist) = res
+            sorted_distances_to_q[ranking-1] = (ranking, n_doc, dist)
+            ranking += 1    
+
+        sorted_q_df = pd.DataFrame({'QUERY_ID':q_id, 'RESPONSE':sorted_distances_to_q}, columns=columns)
+        
+        final_results = pd.concat([final_results, sorted_q_df], ignore_index=True)
+        t_query_end = time.time()
+
+        t_avg = (t_avg + (t_query_end-t_query_start)) / 2 
+        # DEBUGGING AND PROGRESS EVALUATION
+        if(i%10 == 0):
+            logging.info(f"#### {i} queries ranked so far, with average time of {t_avg:.5f} seconds.")
+
+    t_end = time.time()
+    logging.info(f"All queries {len(queries)} successfully ranked. (time elapsed:{(t_end-t_start):.5f} seconds)")
+
+
+    try:
+        logging.info(f"Saving final results dataset to {config['RESULTADOS']}")
+        final_results.to_csv(config['RESULTADOS'],sep=";",index=False)
+        logging.info(f"Saved dataset successfully.")
+    except Exception as e:
+        logging.exception("An error ocurred while saving the file. Check info below for further details.")
+        print(e)
+
+    logging.info("[FUNCTION] ranking ended.")
+
+    return final_results
 
 
 if __name__ == "__main__":
@@ -142,4 +203,8 @@ if __name__ == "__main__":
     queries['QueryText'] = queries['QueryText'].apply(string_to_list)
 
     # Search module functionality        
-    search(model,queries)
+    data = search(model,queries)
+    ranking(data)
+
+    # If already have intermediary results (therfore, non-ranked), use call below
+    #ranking(None,True,'../../results/results[NON-RANKED].csv')
