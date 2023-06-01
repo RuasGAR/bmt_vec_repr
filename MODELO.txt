@@ -1,0 +1,11 @@
+O espaço vetorial para servir de base ao trabalho foi construído a partir dos documentos do dataset
+CysticFibrosis2. Uma matriz esparsa (utilizando a técnica de compressão CSR) foi a estrutura de dados selecionada, sendo
+armazenada como objeto serializado pela biblioteca pickle do Python3 (versão em "requirements.txt").
+
+Até esta versão, a matriz utiliza pesos TF-IDF com termos e documentos, mais especificamente nessa organização:
+
+    - termos retirados dos documentos, com aplicação de pré-processamento incluindo
+    remoção de stopwords, pontuações, símbolos, e também números. Stemming é uma opção dessa etapa,
+    mas se for feito, será sempre sob as diretrizes de Porter;
+
+    - documentos idetificados coletados do dataset;
