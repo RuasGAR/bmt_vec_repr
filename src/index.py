@@ -170,7 +170,7 @@ def save_vec_space(sparse_matrix,labels,dest):
         logging.info(f"Saving given data into {dest} directory.")
 
         saveable = {'sparse_matrix':sparse_matrix, 'token':labels}
-        with open(f'{dest}/vec_model.pkl','wb') as f:
+        with open(f'{dest}/vec_model-NOSTEMMER.pkl','wb') as f:
             pickle.dump(saveable, f)    
         
         logging.info(f"Saved successfully to vec_model.pkl")

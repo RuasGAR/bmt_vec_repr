@@ -15,16 +15,15 @@ if __name__ == "__main__":
 
     # Loading all config files
     pc_config = read_config_file('pc.cfg')
-    gli_config = read_config_file('gli.cfg')
+    gli_config = read_config_file('gli.cfg',special_condition="gli")
     index_config = read_config_file('index.cfg')
     search_config = read_config_file('search.cfg')
 
-
-    # PRE PROCESS PHASE 
+    # PREPROCESS PHASE 
     logging.info("[PREPROCESS - START] query_processor.py starting...")
 
     queries_iterator = read_query_file(config=pc_config)
-    queries = preprocessing_queries(queries_iterator)
+    queries = preprocessing_queries(queries_iterator,stem_flag=pc_config['STEMMER'])
     generate_query_csv(queries,config=pc_config)
     generate_expected_csv(queries_iterator,config=pc_config)
     

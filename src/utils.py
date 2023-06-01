@@ -1,5 +1,6 @@
 import re
 import logging
+from os import path
 from configobj import ConfigObj
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
@@ -38,7 +39,7 @@ def remove_stopwords_normalize_and_apply_stemmer(token_list,stemmer_flag=False):
     return filtered_list
 
 
-def read_config_file(fname):
+def read_config_file(fname,special_condition):
 
     # Config
     config = {}
@@ -50,4 +51,40 @@ def read_config_file(fname):
         print("For more information, check the exact error below:")
         print(e)
 
+    if special_condition == "gli":
+        config = {"LEIA":[], "ESCREVA":"", "STEMMER":0}
+        try: 
+            with open("gli.cfg") as f:
+                for line in f.readlines():
+                    if "ESCREVA" in line:
+                        config["ESCREVA"] = extract_path(line)
+                    elif "STEMMER" in line:
+                        config['STEMMER'] = int(extract_path(line))    
+                    else:
+                        config["LEIA"].append(extract_path(line))
+            logging.info("The config file was parsed with no errors.")
+        except Exception as e:
+            logging.exception("Errors ocurred while parsing the config file.");
+            print("For more information, check the exact error below:")
+            print(e)
+            exit()
+
     return config
+
+
+def extract_path(string):
+    return string.split("=")[1].replace("\n","")
+
+def edit_fname_according_to_stemmer(standard_fname,stemmer_flag):
+
+    file_basename, extension = path.basename(standard_fname).split('.')
+    dirs = path.dirname(standard_fname)
+
+    stemmer = ""
+    if bool(stemmer_flag) == True:
+        stemmer = "STEMMER"
+    else:
+        stemmer = "NOSTEMMER"
+        
+    return (path.join(dirs,file_basename)+'-'+stemmer+'.'+extension) 
+        

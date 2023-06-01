@@ -2,7 +2,7 @@ from unidecode import unidecode
 import xml.etree.ElementTree as ET
 import pandas as pd
 import logging
-from utils import remove_stopwords_normalize_and_apply_stemmer
+from utils import remove_stopwords_normalize_and_apply_stemmer, edit_fname_according_to_stemmer
 from nltk.tokenize import word_tokenize
 import time
 
@@ -34,7 +34,7 @@ def read_query_file(config):
     return file_content 
 
 
-def preprocessing_queries(et) -> pd.DataFrame:
+def preprocessing_queries(et,stem_flag) -> pd.DataFrame:
     
     logging.info("[FUNCTION] preprocessing_queries starting ...")
     lang = 'english'
@@ -50,7 +50,7 @@ def preprocessing_queries(et) -> pd.DataFrame:
         q_txt = q.find("QueryText").text
         q_txt = unidecode(q_txt)
         q_tokens = word_tokenize(q_txt, language=lang)
-        q_tokens = remove_stopwords_normalize_and_apply_stemmer(q_tokens)
+        q_tokens = remove_stopwords_normalize_and_apply_stemmer(q_tokens, stem_flag)
         q = ','.join(q_tokens)
         queries.loc[index+1] = [q_num, q]
     t_end = time.time()
@@ -63,12 +63,13 @@ def preprocessing_queries(et) -> pd.DataFrame:
 def generate_query_csv(queries,config):
     
     logging.info("[FUNCTION] generate_query_csv starting ...")
-    filepath = config["CONSULTAS"]
+    filepath = edit_fname_according_to_stemmer(config["CONSULTAS"],config['STEMMER'])  
+    
     
     try:
         queries.to_csv(filepath,sep=';',index=False) #overwrite as standard behaviour
     except Exception as e:
-        logging.exception("Error while trying to create csv on {filepath}. More info below.")
+        logging.exception(f"Error while trying to create csv on {filepath}. More info below.")
         print(e);
 
     logging.info("[FUNCTION] generate_query_csv ended.")
@@ -101,7 +102,7 @@ def generate_expected_csv(q_iter,config):
 
     # saving to CSV file ...
     
-    filepath = config["QUERY_CONFIG"]["ESPERADOS"]
+    filepath = edit_fname_according_to_stemmer(config["QUERY_CONFIG"]["ESPERADOS"],config['STEMMER'])
 
     try:
         logging.info("Creating expected results file according to 'ESPERADOS' config field.")

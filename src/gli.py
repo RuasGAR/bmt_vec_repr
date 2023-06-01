@@ -5,33 +5,9 @@ from nltk.tokenize import word_tokenize
 from utils import remove_stopwords_normalize_and_apply_stemmer
 
 
-# logging config
-logging.basicConfig(level=logging.DEBUG)
-
-
-def extract_path(string):
-    return string.split("=")[1].replace("\n","")
-
-
-# reading actual config file
-config = {"LEIA":[], "ESCREVA":""}
-try: 
-    with open("gli.cfg") as f:
-        for line in f.readlines():
-            if "ESCREVA" in line:
-                config["ESCREVA"] = extract_path(line)    
-            else:
-                config["LEIA"].append(extract_path(line))
-    logging.info("The config file was parsed with no errors.")
-except Exception as e:
-    logging.exception("Errors ocurred while parsing the config file.");
-    print("For more information, check the exact error below:")
-    print(e)
-    exit()
-
 ## READING FILES
 
-def read_xml_files():
+def read_xml_files(config):
     
     logging.info("[FUNCTION] read_xml_files starting ...")
 
@@ -67,7 +43,7 @@ def read_xml_files():
 
 
 
-def generate_records_csv(records):
+def generate_records_csv(records,config):
     
     logging.info("[FUNCTION] generate_records_csv starting ...")
     
@@ -95,7 +71,7 @@ def generate_records_csv(records):
         # Normalizing and extracting stopwords
         rec_text = rec_text.lower()
         tokens = word_tokenize(rec_text)
-        words = remove_stopwords_normalize_and_apply_stemmer(tokens)
+        words = remove_stopwords_normalize_and_apply_stemmer(tokens, stemmer_flag=config['STEMMER'])
         
         # Data filling
         for w in words:
