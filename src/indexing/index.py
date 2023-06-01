@@ -1,3 +1,4 @@
+from math import log10
 from configobj import ConfigObj
 import pandas as pd
 import logging
@@ -21,6 +22,7 @@ logging.basicConfig(level=logging.DEBUG)
       a capacidade de caracterizar documentos do termo é maior (sempre pensando em referenciais)  
 """
 
+
 # Config
 config = {}
 try: 
@@ -31,27 +33,67 @@ except Exception as e:
     print("For more information, check the exact error below:")
     print(e)
 
-def idf(data,n_docs):
-    """ Retorna um dicionário no formato {doc_number: number_of_terms} """
+# Main auxiliar methods
+def tfn(doc_num,doc_list, tf_max):
 
-    logging.info("[FUNCTION] idf starting ...")
-    inverse_document_frequency = {key: 0 for key in range(0,n_docs)}
+    """ 
+        Consider the example of a single line of the inverted list:
 
-    logging.info(f"Counting the number of terms in each of the {n_docs} documents.")
-    t_start = time.time()
+        FIBROSIS; [1,1,1,78,90,493,1202] 
 
-    for _,doc_list in data.itertuples(index=False):
-        for _d in doc_list:
-            inverse_document_frequency[_d-1] += 1
+        This function will compute the amount of times a DOCUMENT_NUMBER is repeated,
+        which will give us the semantic value of the frequency of that term in that document.
 
-    t_end = time.time()
-    logging.info(f"Finished term count in {(t_end-t_start):.5f}s.")
-    logging.info("[FUNCTION] idf ended.")
+        Then, this value is normalized using the frequency of the most frequent term.
+    
+    """
 
-    return inverse_document_frequency    
+    return (doc_list.count(doc_num)/tf_max)
+
+
+def idf(total_n, tf):
+    return log10(total_n/tf)
+
 
 def tf_idf(tf,idf):
-    return tf/idf
+    return tf*idf
+
+
+def tf_max_all_docs(data,n_docs):
+    """ Retorna um dicionário no formato a seguir: 
+
+        {
+            doc_number:
+                [ 
+                    number_of_terms (on the document) 
+                    most_frequent_term, (on the document)
+                    frequency_of_the_most_frequent_term (on the document)
+                ]
+        } 
+    """
+
+    logging.info("[FUNCTION] tf_max_all_docs starting ...")
+    doc_info = {key: [0,"",0] for key in range(0,n_docs)}
+
+    logging.info(f"Composing information of frequency for {n_docs} documents ...")
+    t_start = time.time()
+
+    for token,doc_list in data.itertuples(index=False):
+        for d in doc_list:
+            doc_info[d-1][0] += 1
+            freq_of_t_in_d = doc_list.count(d)
+            if freq_of_t_in_d > doc_info[d-1][2]:
+                doc_info[d-1][1] = token
+                doc_info[d-1][2] = freq_of_t_in_d
+            
+
+    t_end = time.time()
+    logging.info(f"Finished collection in {(t_end-t_start):.5f}s.")
+    logging.info("[FUNCTION] tf_max_all_docs ended.")
+
+    return doc_info    
+
+
 
 def weight(chosen_weight):
     # Abstraction to the metric used as weights
@@ -92,8 +134,8 @@ def generate_vec_space():
     # matrix and labels-mapping dictionary
     matrix = np.zeros((len(data.index),n_docs))
     labels = {}
-        
-    inv_doc_freq = idf(data,n_docs)
+
+    doc_info = tf_max_all_docs(data, n_docs)    
 
     """ 
             Satisfying conditions:
@@ -120,7 +162,9 @@ def generate_vec_space():
             d = int(d)
             if matrix[index][d-1] == 0:
                 # Refer to the 'weight' function for explanation on the the applied logic
-                matrix[index][d-1] = weight('tf-idf')(doc_list.count(d),inv_doc_freq[d-1]) 
+                tf_norm = tfn(d,doc_list,doc_info[d-1][2])
+                inv_doc_freq = idf(n_docs,len(doc_list))
+                matrix[index][d-1] = weight('tf-idf')(tf_norm, inv_doc_freq) 
             else:
                 # if the value was already set, we don't need to re-calculate the weights
                 continue
