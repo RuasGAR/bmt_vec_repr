@@ -1,14 +1,10 @@
 from math import log10
-from configobj import ConfigObj
 import pandas as pd
 import logging
 import numpy as np
 import time
 from scipy.sparse import csr_matrix
 import pickle
-
-# logging config
-logging.basicConfig(level=logging.DEBUG)
 
 """  
     PONTOS CHAVE DE REFERÊNCIA
@@ -22,16 +18,6 @@ logging.basicConfig(level=logging.DEBUG)
       a capacidade de caracterizar documentos do termo é maior (sempre pensando em referenciais)  
 """
 
-
-# Config
-config = {}
-try: 
-    config = ConfigObj('index.cfg')
-    logging.info("The config file was parsed with no errors.")
-except Exception as e:
-    logging.exception("Errors ocurred while parsing the config file.");
-    print("For more information, check the exact error below:")
-    print(e)
 
 # Main auxiliar methods
 def tfn(doc_num,doc_list, tf_max):
@@ -106,7 +92,7 @@ def weight(chosen_weight):
         return None
 
 
-def generate_vec_space():
+def generate_vec_space(config):
     """ 
         Gera uma matriz termo-documento, na qual os pesos estão representados com TF-IDF;
         dado o caminho do arquivo lido de index.cfg. 
@@ -179,7 +165,7 @@ def generate_vec_space():
     return (matrix,labels)
 
 
-def save_vec_space(sparse_matrix,labels,dest="../../generated"):
+def save_vec_space(sparse_matrix,labels,dest):
     try:
         logging.info(f"Saving given data into {dest} directory.")
 
@@ -192,12 +178,3 @@ def save_vec_space(sparse_matrix,labels,dest="../../generated"):
         logging.exception("Error while saving the model (vectorial space). Check log below.")
         print(e)
 
-
-if __name__ == "__main__":
-
-    logging.info("[FILE] index.py starting...")
-    data,labels = generate_vec_space()
-    
-    save_vec_space(data,labels)
-
-    logging.info("[FILE] index.py ended.")

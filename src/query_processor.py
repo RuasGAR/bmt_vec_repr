@@ -1,39 +1,18 @@
 from unidecode import unidecode
 import xml.etree.ElementTree as ET
 import pandas as pd
-from configobj import ConfigObj
 import logging
-import string
-import nltk
-import time
+from utils import remove_stopwords_normalize_and_apply_stemmer
 from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-
-nltk.download('punkt')
-nltk.download('stopwords')
-
-
-# logging config
-logging.basicConfig(level=logging.DEBUG)
-
-
-# general config 
-config = {}
-try: 
-    config = ConfigObj('pc.cfg')
-    logging.info("The config file was parsed with no errors.")
-except Exception as e:
-    logging.exception("Errors ocurred while parsing the config file.");
-    print("For more information, check the exact error below:")
-    print(e)
+import time
 
 
 ###### QUERY GENERATION
 
-def read_query_file():
+def read_query_file(config):
     logging.info("[FUNCTION] read_query_file starting ...")
     logging.info("Reading the file specified by the field 'LEIA'")
-    filepath = config["QUERY_CONFIG"]["LEIA"];
+    filepath = config["LEIA"];
     logging.info(f"The file to be read is located/have name: {filepath}")
     
     with open(filepath) as f:
@@ -71,8 +50,7 @@ def preprocessing_queries(et) -> pd.DataFrame:
         q_txt = q.find("QueryText").text
         q_txt = unidecode(q_txt)
         q_tokens = word_tokenize(q_txt, language=lang)
-        # list comprehension to clean punctuation and stopwords
-        q_tokens = [t.upper() for t in q_tokens if t not in string.punctuation and t not in stopwords.words(lang)]
+        q_tokens = remove_stopwords_normalize_and_apply_stemmer(q_tokens)
         q = ','.join(q_tokens)
         queries.loc[index+1] = [q_num, q]
     t_end = time.time()
@@ -82,10 +60,10 @@ def preprocessing_queries(et) -> pd.DataFrame:
     return queries
 
 
-def generate_query_csv(queries):
+def generate_query_csv(queries,config):
     
     logging.info("[FUNCTION] generate_query_csv starting ...")
-    filepath = config["QUERY_CONFIG"]["CONSULTAS"]
+    filepath = config["CONSULTAS"]
     
     try:
         queries.to_csv(filepath,sep=';',index=False) #overwrite as standard behaviour
@@ -98,7 +76,7 @@ def generate_query_csv(queries):
 
 ##### EXPECTED generation
 
-def generate_expected_csv(q_iter):
+def generate_expected_csv(q_iter,config):
 
     logging.info("[FUNCTION] generate_expected_csv starting ...")
     cols = ["QueryNumber", "DocNumber", "DocVotes"]
@@ -137,16 +115,4 @@ def generate_expected_csv(q_iter):
     logging.info("[FUNCTION] generate_expected_csv ended.")
 
 
-##### MAIN PROGRAM 
 
-if __name__ == "__main__":
-
-
-    logging.info("[FILE] query_processor.py starting...")
-
-    queries_iterator = read_query_file()
-    queries = preprocessing_queries(queries_iterator)
-    generate_query_csv(queries)
-    generate_expected_csv(queries_iterator)
-    
-    logging.info("[FILE] query_processor.py has ended its activities.")

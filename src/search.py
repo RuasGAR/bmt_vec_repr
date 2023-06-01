@@ -1,27 +1,13 @@
 import logging
 import time
-import pickle
 import numpy as np
 import pandas as pd
-from configobj import ConfigObj
 from scipy.sparse import csr_matrix
 from os import path
 from functools import reduce
 from typing import Tuple,List,Union
 import ast
 
-# logging config
-logging.basicConfig(level=logging.DEBUG)
-
-# Config
-config = {}
-try: 
-    config = ConfigObj('search.cfg')
-    logging.info("The config file was parsed with no errors.")
-except Exception as e:
-    logging.exception("Errors ocurred while parsing the config file.");
-    print("For more information, check the exact error below:")
-    print(e)
 
 def cosine_distance(x,y):
     num = np.dot(x,y)
@@ -33,7 +19,7 @@ def cosine_distance(x,y):
         cos_dist_float = cos_dist[0]
     return cos_dist_float
 
-def search(model, queries):
+def search(model, queries, config):
 
     """ Returns non-ranked results in a Dataframe """
 
@@ -108,7 +94,7 @@ def search(model, queries):
 
     return no_rank_results
 
-def ranking(data:Union[List[Tuple[int,int,float]],None]=None, proxy_flag=False, proxy_fname=None):
+def ranking(config,data:Union[List[Tuple[int,int,float]],None]=None, proxy_flag=False, proxy_fname=None):
 
     """ Saves and return the final results, ordeded by query_id and properly ranked acoording to cosine similarity """
 
@@ -169,42 +155,4 @@ def ranking(data:Union[List[Tuple[int,int,float]],None]=None, proxy_flag=False, 
 
     return final_results
 
-
-if __name__ == "__main__":
-    
-    model_path = config['MODELO']
-
-    model = {}
-    
-    logging.info(f"Loading model in {model_path} ...")
-    t_start = time.time()
-    try:
-        with open(model_path, 'rb') as f:
-            model = pickle.load(f)
-        t_end = time.time()
-        logging.info(f"Loaded model successfully. (time elapsed: {(t_end-t_start):.5f} seconds)")
-    except Exception as e:
-        logging.exception("An error occurred while loading the model. Check further info below.")
-        print(e)
-
-
-    logging.info(f"Reading queries file located at {config['CONSULTAS']} ...")
-    t_start = time.time()
-    try:
-        queries = pd.read_csv(config['CONSULTAS'], sep=";")
-        t_end = time.time()
-        logging.info(f"Read query file (containing {len(queries.index)} queries) successufully. (time elapsed:{(t_end-t_start):.5f} seconds)")
-    except Exception as e:
-        logging.exception("An error ocurred while reading the file. Check further info below.")
-        print(e)
-
-    # Applying necessary conversions
-    string_to_list = lambda tokens: [t.strip() for t in tokens.split(",")]
-    queries['QueryText'] = queries['QueryText'].apply(string_to_list)
-
-    # Search module functionality        
-    data = search(model,queries)
-    ranking(data)
-
-    # If already have intermediary results (therfore, non-ranked), use call below
-    #ranking(None,True,'../../results/results[NON-RANKED].csv')
+   

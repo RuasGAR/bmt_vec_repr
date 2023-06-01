@@ -1,14 +1,9 @@
-import pandas as pd
 import logging
 import time
-import re
 import xml.etree.ElementTree as ET
 from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from unidecode import unidecode
+from utils import remove_stopwords_normalize_and_apply_stemmer
 
-# REGEX GLOBAL CONSTANT (notice that is applies to lower case)
-FIT_PATTERN = re.compile(r'^[a-z]+$')
 
 # logging config
 logging.basicConfig(level=logging.DEBUG)
@@ -70,21 +65,7 @@ def read_xml_files():
 
     return records 
 
-# Auxiliar method for properly filtering undesired word structures
-def check_string(str):
-    
-    # check for word size
-    if (len(str) < 2):
-        return False
 
-    # checking for ASCII symbols other than letters form a to z, lower case.
-    # this automatically exclude "words" formed only by ints (e.g. '189') and floats (e.g. '2.41'); 
-    # and also remove blank strings such as ' ' and ` ` patterns 
-    if (bool(FIT_PATTERN.match(str)) == False):
-        return False
-
-    # we return True to evaluate the str parameter as a valid token    
-    return True
 
 def generate_records_csv(records):
     
@@ -112,13 +93,9 @@ def generate_records_csv(records):
             rec_text = rec.find("ABSTRACT").text        
             
         # Normalizing and extracting stopwords
-        rec_text = unidecode(rec_text).lower()
+        rec_text = rec_text.lower()
         tokens = word_tokenize(rec_text)
-        words = [
-            token.upper() for token in tokens 
-            if check_string(token) and 
-            token not in stopwords.words() 
-        ]
+        words = remove_stopwords_normalize_and_apply_stemmer(tokens)
         
         # Data filling
         for w in words:
@@ -148,13 +125,3 @@ def generate_records_csv(records):
     logging.info(f"File successfully created!")
 
     logging.info("[FUNCTION] generate_records_csv ended.")
-
-
-if __name__ == "__main__":
-
-    logging.info("[FILE] gli.py starting...")
-
-    data = read_xml_files()
-    generate_records_csv(data)
-
-    logging.info("[FILE] gli.py ended.")   

@@ -1,0 +1,53 @@
+import re
+import logging
+from configobj import ConfigObj
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+nltk.download('punkt')
+nltk.download('stopwords')
+
+# Global instances
+porter = PorterStemmer()
+FIT_PATTERN = re.compile(r'^[a-z]+$')
+
+# Auxiliar method for properly filtering undesired word structures
+def check_string(str):
+    
+    # check for word size
+    if (len(str) < 2):
+        return False
+
+    # checking for ASCII symbols other than letters form a to z, lower case.
+    # this automatically exclude "words" formed only by ints (e.g. '189') and floats (e.g. '2.41'); 
+    # and also remove blank strings such as ' ' and ` ` patterns 
+    if (bool(FIT_PATTERN.match(str)) == False):
+        return False
+
+    # we return True to evaluate the str parameter as a valid token    
+    return True
+
+def remove_stopwords_normalize_and_apply_stemmer(token_list,stemmer_flag=False):
+    
+    if(stemmer_flag == True):
+    
+        filtered_list = [porter.stem(t).upper() for t in token_list if (t not in stopwords.words("english") and check_string(t))] 
+
+    else:
+        filtered_list = [t.upper() for t in token_list if (t not in stopwords.words("english") and check_string(t))] 
+    
+    return filtered_list
+
+
+def read_config_file(fname):
+
+    # Config
+    config = {}
+    try: 
+        config = ConfigObj(fname)
+        logging.info(f"The {fname} config file was parsed with no errors.")
+    except Exception as e:
+        logging.exception("Errors ocurred while parsing the config file.");
+        print("For more information, check the exact error below:")
+        print(e)
+
+    return config
