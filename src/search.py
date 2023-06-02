@@ -6,7 +6,9 @@ from scipy.sparse import csr_matrix
 from os import path
 from functools import reduce
 from typing import Tuple,List,Union
+from utils import edit_fname_according_to_stemmer
 import ast
+
 
 
 def cosine_distance(x,y):
@@ -82,6 +84,8 @@ def search(model, queries, config):
         res_basename_parts[1]
     )    
     
+    proxy_filename = edit_fname_according_to_stemmer(proxy_filename, config['STEMMER'])
+
     try:
         logging.info(f"Saving proxy file WITHOUT RANKING in {proxy_filename} ...")
         no_rank_results.to_csv(proxy_filename, sep=";", index=False)
@@ -145,7 +149,11 @@ def ranking(config,data:Union[List[Tuple[int,int,float]],None]=None, proxy_flag=
 
     try:
         logging.info(f"Saving final results dataset to {config['RESULTADOS']}")
-        final_results.to_csv(config['RESULTADOS'],sep=";",index=False)
+        final_results.to_csv(
+            edit_fname_according_to_stemmer(config['RESULTADOS'], config['STEMMER']),
+            sep=";",
+            index=False
+        )
         logging.info(f"Saved dataset successfully.")
     except Exception as e:
         logging.exception("An error ocurred while saving the file. Check info below for further details.")

@@ -27,14 +27,13 @@ if __name__ == "__main__":
     generate_query_csv(queries,config=pc_config)
     generate_expected_csv(queries_iterator,config=pc_config)
     
-    logging.info("[PREPROCESS - END] query_processor.py has ended its activities.")
-    
+    logging.info("[PREPROCESS - END] query_processor.py has ended its activities.")    
 
     # INVERTED LIST PHASE
     logging.info("[INVERTED LIST - START] gli.py starting...")
 
     data = read_xml_files(config=gli_config)
-    generate_records_csv(config=gli_config)
+    generate_records_csv(data,config=gli_config)
 
     logging.info("[INVERTED LIST - END] gli.py ended.")
 
@@ -42,7 +41,7 @@ if __name__ == "__main__":
     logging.info("[INDEXING - START] index.py starting...")
 
     data,labels = generate_vec_space(config=index_config)
-    save_vec_space(data,labels,dest="../../results")
+    save_vec_space(data,labels,dest="../results",config=index_config)
 
     logging.info("[INDEXING - END] index.py ended.")  
 
@@ -78,10 +77,10 @@ if __name__ == "__main__":
     queries['QueryText'] = queries['QueryText'].apply(string_to_list)
 
     # Search module functionality        
-    data = search(model,queries)
-    ranking(data)
+    data = search(model,queries,config=search_config)
+    ranking(data=data,config=search_config)
 
     # If already have intermediary results (therfore, non-ranked), use call below
-    #ranking(None,True,'../../results/results[NON-RANKED].csv')
+    #ranking(proxy_flag=True,proxy_fname='../results/results[NON-RANKED]-NOSTEMMER.csv',config=search_config)
     
-    logging.info("[SEARCH - END] search.py starting...")
+    logging.info("[SEARCH - END] search.py ended.")

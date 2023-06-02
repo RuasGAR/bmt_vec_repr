@@ -2,7 +2,7 @@ import logging
 import time
 import xml.etree.ElementTree as ET
 from nltk.tokenize import word_tokenize
-from utils import remove_stopwords_normalize_and_apply_stemmer
+from utils import remove_stopwords_normalize_and_apply_stemmer, edit_fname_according_to_stemmer
 
 
 ## READING FILES
@@ -47,7 +47,7 @@ def generate_records_csv(records,config):
     
     logging.info("[FUNCTION] generate_records_csv starting ...")
     
-    path = config["ESCREVA"]
+    path = edit_fname_according_to_stemmer(config["ESCREVA"],config['STEMMER']) 
 
     data = {}
 

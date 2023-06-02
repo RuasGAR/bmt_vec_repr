@@ -102,7 +102,7 @@ def generate_expected_csv(q_iter,config):
 
     # saving to CSV file ...
     
-    filepath = edit_fname_according_to_stemmer(config["QUERY_CONFIG"]["ESPERADOS"],config['STEMMER'])
+    filepath = edit_fname_according_to_stemmer(config["ESPERADOS"],config['STEMMER'])
 
     try:
         logging.info("Creating expected results file according to 'ESPERADOS' config field.")

@@ -3,6 +3,7 @@ import pandas as pd
 import logging
 import numpy as np
 import time
+from utils import edit_fname_according_to_stemmer
 from scipy.sparse import csr_matrix
 import pickle
 
@@ -165,15 +166,17 @@ def generate_vec_space(config):
     return (matrix,labels)
 
 
-def save_vec_space(sparse_matrix,labels,dest):
+def save_vec_space(sparse_matrix,labels,dest,config):
     try:
         logging.info(f"Saving given data into {dest} directory.")
 
         saveable = {'sparse_matrix':sparse_matrix, 'token':labels}
-        with open(f'{dest}/vec_model-NOSTEMMER.pkl','wb') as f:
+        fname = edit_fname_according_to_stemmer(f'{dest}/vec_model.pkl',stemmer_flag=config['STEMMER'])
+        
+        with open(fname,'wb') as f:
             pickle.dump(saveable, f)    
         
-        logging.info(f"Saved successfully to vec_model.pkl")
+        logging.info(f"Saved successfully to {fname}")
     except Exception as e:
         logging.exception("Error while saving the model (vectorial space). Check log below.")
         print(e)

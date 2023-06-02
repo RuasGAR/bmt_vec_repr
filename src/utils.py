@@ -2,6 +2,7 @@ import re
 import logging
 from os import path
 from configobj import ConfigObj
+import nltk
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 nltk.download('punkt')
@@ -39,17 +40,7 @@ def remove_stopwords_normalize_and_apply_stemmer(token_list,stemmer_flag=False):
     return filtered_list
 
 
-def read_config_file(fname,special_condition):
-
-    # Config
-    config = {}
-    try: 
-        config = ConfigObj(fname)
-        logging.info(f"The {fname} config file was parsed with no errors.")
-    except Exception as e:
-        logging.exception("Errors ocurred while parsing the config file.");
-        print("For more information, check the exact error below:")
-        print(e)
+def read_config_file(fname,special_condition=None):
 
     if special_condition == "gli":
         config = {"LEIA":[], "ESCREVA":"", "STEMMER":0}
@@ -68,6 +59,16 @@ def read_config_file(fname,special_condition):
             print("For more information, check the exact error below:")
             print(e)
             exit()
+    else:
+        config = {}
+        try: 
+            config = ConfigObj(fname)
+            logging.info(f"The {fname} config file was parsed with no errors.")
+        except Exception as e:
+            logging.exception("Errors ocurred while parsing the config file.");
+            print("For more information, check the exact error below:")
+            print(e)
+            exit()
 
     return config
 
@@ -76,12 +77,14 @@ def extract_path(string):
     return string.split("=")[1].replace("\n","")
 
 def edit_fname_according_to_stemmer(standard_fname,stemmer_flag):
-
+    
     file_basename, extension = path.basename(standard_fname).split('.')
     dirs = path.dirname(standard_fname)
 
+    print(file_basename, stemmer_flag)
+
     stemmer = ""
-    if bool(stemmer_flag) == True:
+    if int(stemmer_flag) == 1:
         stemmer = "STEMMER"
     else:
         stemmer = "NOSTEMMER"
