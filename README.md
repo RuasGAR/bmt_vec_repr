@@ -11,7 +11,7 @@ junto do termo relacionado. Caso aparecesse mais de uma vez, o identificador do 
 
 3. Indexador: a partir da Lista Invertida, a transformação para um espaço vetorial - utilizando medidas como de Frequência de Termo e Inversa de Frequência de Documento (TF-IDF) - seriam o próximo passo.
 
-4 - Busca: com todo o dataset transformado, era hora de realizarmos as buscas com base em um documento fornecido pelo professor. Diante dos resultados obtidos e daqueles esperados, seria possível chegar a métricas de acurácia, recall, entre outras.
+4. Busca: com todo o dataset transformado, era hora de realizarmos as buscas com base em um documento fornecido pelo professor. Diante dos resultados obtidos e daqueles esperados, seria possível chegar a métricas de acurácia, recall, entre outras.
 
 Uma análise mais aprofundada da performance era um objetivo posterior, que acabou não sendo factível no tempo hábil.
 
